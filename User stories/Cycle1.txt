@@ -1,0 +1,4 @@
+I have sepnt 40 hours on Cycle 1, the most challenging part in cycle one is to make the hero move and swith the level.
+Because I couldn't determine the initial UML at first, therefore the initial structure of the project stopeed me for a while.
+For some reason, it is hrad for me to put the actionListeners together along with sitching levels and thread repainting.
+Still working on it...

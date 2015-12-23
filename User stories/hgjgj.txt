@@ -1,0 +1,224 @@
+import java.awt.BorderLayout;
+import java.awt.Font;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
+import java.io.FileNotFoundException;
+import java.util.ArrayList;
+
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+
+public class Frame extends JFrame implements Runnable {
+	private Thread mythread;
+	private Thread monsterThread;
+	private Game game;
+	private ArrayList<Coordinates> coordList;
+	private JLabel label;
+	private String[] levels = {".\\Map\\level1.txt",".\\Map\\map2.txt",
+			".\\Map\\map3.txt",".\\Map\\map4.txt",".\\Map\\map5.txt"};
+	private String leveltoload;
+	private int index;
+
+	private int maxRow=20;
+	private int maxColumn=18;
+
+	private int emeraldnumber;
+
+	protected boolean shot = false;
+	
+	
+	public Frame() {
+		Runnable r1 = new Monster(10, 10, 3);
+		this.mythread = new Thread(this);
+		this.mythread.start();
+		this.index=0;
+		this.emeraldnumber=0;
+		this.leveltoload=this.levels[0];
+		this.monsterThread = new Thread(r1);
+
+		try {
+			this.coordList = new Map().getMap(this.leveltoload);
+		} catch (FileNotFoundException exception) {
+			System.out.print("No map!");
+		}
+		this.game = new Game(this.coordList);
+		this.label = new JLabel("Score :00000          Life : 05"); //          Level : 1");
+		Font font = new Font("Times New Roman", 0, 50);
+		this.label.setFont(font);
+		this.game.loadgame(this.leveltoload);
+		this.add(this.game);
+		this.add(this.label, BorderLayout.NORTH);
+		
+		//set up the frame and the life and score pannel
+
+
+	}
+	//start game method contains an actionlistener
+	//where you can change levels and make the hero to move
+	public void startGame(){
+		this.addKeyListener(new KeyListener(){
+			
+
+			@Override
+			public void keyPressed(KeyEvent arg0) {
+				key(arg0);
+				
+			}
+
+			@Override
+			public void keyReleased(KeyEvent arg0) {
+				// TODO Auto-generated method stub.
+				
+			}
+
+			@Override
+			public void keyTyped(KeyEvent arg0) {
+				// TODO Auto-generated method stub.
+				
+			}
+			
+			public void key(KeyEvent a) {
+				switch(a.getKeyCode()){
+				//go to left
+					case KeyEvent.VK_LEFT: 
+						game.go(-1, 0);
+						updateLabel();
+						if (checkEmerald()==0)
+							levelUp();
+						
+						
+					break;
+					//go to right
+					case KeyEvent.VK_RIGHT:
+						game.go(1, 0);
+						updateLabel();
+//						System.out.println(checkEmerald());
+						if (checkEmerald()==0)
+							levelUp();
+						
+					break; 
+					//go up
+					case KeyEvent.VK_UP:
+						game.go(0, -1);
+						updateLabel();
+//						System.out.println(checkEmerald());
+						if (checkEmerald()==0)
+							levelUp();
+						
+					break;
+					//go_down
+					case KeyEvent.VK_DOWN:
+						game.go(0, 1);
+						updateLabel();
+//						System.out.println(checkEmerald());
+						if (checkEmerald()==0)
+							levelUp();
+			
+					break;
+					//prevoius level
+					case KeyEvent.VK_P:
+						levelDown();
+						
+					break;
+					//go up a level
+					case KeyEvent.VK_U:
+						levelUp();
+					case KeyEvent.VK_SPACE:
+						game.shoot();
+				}
+			}
+			
+		});
+	}
+	//determine whether the current level is the last level
+	//if not, the level go up
+	public void levelUp(){
+		if (this.leveltoload == this.levels[4]) {
+			this.leveltoload = this.levels[4];
+			game.loadgame(this.leveltoload);
+			System.out.println("you have reached the last cycle");
+		} else {
+			this.index++;
+			this.leveltoload = this.levels[index];
+			game.loadgame(this.leveltoload);
+			
+		
+			
+			
+		}
+	}
+	
+	//determine wheteher it is at the first level,
+	//if not, go to the previous level
+	public void levelDown(){
+		if (this.leveltoload ==this.levels[0]){
+			this.leveltoload = this.levels[0];
+			game.loadgame(this.leveltoload);
+			
+		}else {
+			this.index--;
+			this.leveltoload = this.levels[index];
+			game.loadgame(this.leveltoload);
+		}
+		
+	}
+//	 get the map and load it
+	public void changeLevel(String mapName) {
+		this.remove(this.game);
+		try {
+			this.coordList = new Map().getMap(mapName);
+		} catch (FileNotFoundException exception) {
+			System.out.println("can't change level");
+		}
+		this.game = new Game(this.coordList);
+		this.game.loadgame(mapName);
+		this.add(this.game);
+		
+
+		
+
+	}
+	//a thread to update the map
+	@Override
+	public void run() {
+		while (true) {
+			this.repaint();
+			try {
+				Thread.sleep(10);
+			} catch (InterruptedException exception) {
+				System.out.println("can't repaint");
+				// TODO Auto-generated catch-block stub.
+			}
+		}
+		// TODO Auto-generated method stub.
+
+	}
+	
+	public void updateLabel(){
+		if (game.getlife()==0)
+			this.dispose();
+		
+		String score=String.format("%05d", game.getscore());
+		String life=String.format("%02d", game.getlife());
+//		String level=String.format("%1d", getLevel()+1);
+		String updated="Score :"+score+"          "+"Life : " +life+"          ";//"Level :" +level;
+		this.label.setText(updated);
+	}
+	
+	public int checkEmerald(){
+		this.emeraldnumber=0;
+		for (int i=0; i<this.maxRow; i++){
+			for (int j=0; j<this.maxColumn; j++){
+				if (game.getmap()[i][j]==6){
+					this.emeraldnumber++;
+				}
+			}
+		}
+		return emeraldnumber;
+	}
+	
+	public int getLevel(){
+		return this.index;
+	}
+
+}
